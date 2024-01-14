@@ -25,6 +25,26 @@ nouvelle_surface.fill((225, 255, 255))
 etat_jeu = "menu"
 mode_jeu = ""
 
+# Initialisation des scores
+scores = {'X': 0, 'O': 0}
+
+# Fonction pour charger les scores depuis un fichier
+def charger_scores():
+    try:
+        with open('scores.txt', 'r') as file:
+            for line in file:
+                joueur, score = line.strip().split(': ')
+                scores[joueur] = int(score)
+    except FileNotFoundError:
+        # Si le fichier n'existe pas, les scores restent à zéro
+        pass
+
+# Fonction pour sauvegarder les scores dans un fichier
+def sauvegarder_scores():
+    with open('scores.txt', 'w') as file:
+        for joueur, score in scores.items():
+            file.write(f'{joueur}: {score}\n')
+
 # Fonction pour afficher le menu
 def menu():
     background_image = pygame.image.load("Tissu Patchwork Pieces of Time Tic Tac Toe Moss.jpg")
@@ -96,29 +116,40 @@ def affichage_resultat():
     global etat_jeu
     arriere_plan()
     afficher_symboles()
-    message = f"Le joueur {joueur_actuel} a gagné !"
-    if verification_match_nul():
-        message = "Match nul !"
-    resultas_text = pygame.font.Font(None, 30).render(message, True, (100, 200, 230))
+    
+    gagnant = None
+    if verification_colonnes():
+        gagnant = joueur_actuel
+
+    if verification_match_nul() and gagnant is None:
+        message = "Match nul 0_0 !"
+    else:
+        if gagnant:
+            scores[gagnant] += 1  # Mettre à jour le score du joueur gagnant
+            message = f"Le joueur {gagnant} a gagné ! 1_0"
+    
+    resultas_text = pygame.font.Font(None, 25).render(message, True, (100, 200, 230))
     nouvelle_surface.fill((225, 255, 255))  # Réinitialisation de la surface
     nouvelle_surface.blit(resultas_text, (fenetre_size // 2 - resultas_text.get_width() // 2, 25))
     fenetre.blit(nouvelle_surface, (0, 0))
     afficher_boutons()
     pygame.display.flip()
+    
     attente = True
     while attente:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                sauvegarder_scores()  # Sauvegarder les scores avant de quitter
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if 50 <= event.pos[0] <= 250 and 20 <= event.pos[1] <= 70:
                     etat_jeu = "menu"
                     attente = False
-                elif fenetre_size - 250 <= event.pos[0] <= fenetre_size - 50 and 50 <= event.pos[1] <= 70:
+                elif fenetre_size - 250 <= event.pos[0] <= fenetre_size - 50 and 50 <= event.pos[1] <= 80:
+                    sauvegarder_scores()  # Sauvegarder les scores avant de quitter
                     pygame.quit()
                     sys.exit()
-        pygame.time.delay(10)
 
 
 # Joueur actuel (X ou O)
@@ -128,6 +159,7 @@ joueur_actuel = 'X'
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            sauvegarder_scores()  # Sauvegarder les scores avant de quitter
             pygame.quit()
             sys.exit()
 
@@ -146,6 +178,7 @@ while True:
                     grille = [['' for _ in range(3)] for _ in range(3)]  # Réinitialisation de la grille
                     initialiser_mode_jeu()
                 elif 200 <= event.pos[0] <= 400 and 400 <= event.pos[1] <= 450:
+                    sauvegarder_scores()  # Sauvegarder les scores avant de quitter
                     pygame.quit()
                     sys.exit()
 
